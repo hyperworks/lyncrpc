@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Xml;
 using AustinHarris.JsonRpc;
 
 namespace LyncRPC
@@ -14,6 +15,13 @@ namespace LyncRPC
 		public string Hello (HelloRequest request)
 		{
 			return "Hello, " + request.Name;
+		}
+
+		[JsonRpcMethod("DATE")]
+		public string Date()
+		{
+			var now = DateTime.UtcNow;
+			return XmlConvert.ToString (now, XmlDateTimeSerializationMode.RoundtripKind);
 		}
 
 		[JsonRpcMethod ("LOGIN")]
