@@ -75,6 +75,7 @@ namespace LyncRPC
 			var state = (JsonRpcStateAsync)ar;
 			_writer.Write (state.Result);
 			_writer.WriteLine ();
+			_writer.Flush ();
 		}
 	}
 }
