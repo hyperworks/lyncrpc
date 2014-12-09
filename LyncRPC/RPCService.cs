@@ -6,9 +6,16 @@ namespace LyncRPC
 {
 	public class RPCService: JsonRpcService
 	{
-		[JsonRpcMethod]
-		void Login()
+		[JsonRpcMethod("HELLO")]
+		public string Hello(string name)
 		{
+			return "Hello, " + name;
+		}
+
+		[JsonRpcMethod("LOGIN")]
+		public void Login()
+		{
+			// TODO:
 		}
 	}
 }
