@@ -9,7 +9,7 @@ namespace LyncRPC
 {
 	public class Server
 	{
-		public static readonly IPEndPoint DefaultEndPoint = new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), DefaultPort);
+		public static readonly IPEndPoint DefaultEndPoint = new IPEndPoint (new IPAddress (new byte[] { 0, 0, 0, 0 }), DefaultPort);
 		public const int DefaultPort = 7331;
 		public const int MaxClients = 1000;
 
@@ -20,7 +20,7 @@ namespace LyncRPC
 		private ManualResetEventSlim _stopSignal = new ManualResetEventSlim (false);
 		private ManualResetEventSlim _stoppedSignal = new ManualResetEventSlim (false);
 
-		public Server (): this(DefaultEndPoint)
+		public Server () : this (DefaultEndPoint)
 		{
 		}
 
@@ -61,9 +61,12 @@ namespace LyncRPC
 			_clientSlots = new SemaphoreSlim (MaxClients, MaxClients);
 			while (!_stopSignal.IsSet) {
 				var socket = listener.AcceptSocket ();
+				Log.Info ("client: accepted.");
 				socket.NoDelay = true;
 
-				new Thread(() => { HandleClient(socket); }).Start ();
+				new Thread (() => {
+					HandleClient (socket);
+				}).Start ();
 			}
 
 			for (var i = 0; i < MaxClients; i++)
@@ -75,7 +78,8 @@ namespace LyncRPC
 		{
 			_clientSlots.Wait ();
 			try {
-				new Handler(socket, _stopSignal).Run ();
+				new Handler (socket, _stopSignal).Run ();
+				Log.Info("client: disconnected.");
 
 			} finally {
 				_clientSlots.Release ();

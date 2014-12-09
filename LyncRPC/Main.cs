@@ -8,8 +8,10 @@ namespace LyncRPC
 		public static void Main (string[] args)
 		{
 			// constructing the service causes it to be registered (see JsonRpcMethod.cs source for more info.)
-			new RPCService();
+			Log.Info ("registering service...");
+			new RPCService ();
 
+			Log.Info ("starting server...");
 			new Server ().Start ();
 		}
 	}

@@ -57,7 +57,7 @@ namespace LyncRPC
 		public void Run ()
 		{
 			string line;
-			while (!_stopSignal.IsSet && !string.IsNullOrEmpty(line = _reader.ReadLine ())) {
+			while (!_stopSignal.IsSet && !string.IsNullOrEmpty (line = _reader.ReadLine ())) {
 				ProcessLine (line);
 			}
 		}

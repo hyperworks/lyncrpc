@@ -46,6 +46,7 @@
     <Compile Include="Server.cs" />
     <Compile Include="RPCService.cs" />
     <Compile Include="Handler.cs" />
+    <Compile Include="Log.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
