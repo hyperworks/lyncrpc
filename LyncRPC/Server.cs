@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using AustinHarris.JsonRpc;
 
 namespace LyncRPC
 {
@@ -16,8 +17,8 @@ namespace LyncRPC
 		private SemaphoreSlim _clientSlots = null;
 
 		private Thread _pumpThread = null;
-		private ManualResetEventSlim _stopSignal = new ManualResetEventSlim ();
-		private ManualResetEventSlim _stoppedSignal = new ManualResetEventSlim ();
+		private ManualResetEventSlim _stopSignal = new ManualResetEventSlim (false);
+		private ManualResetEventSlim _stoppedSignal = new ManualResetEventSlim (false);
 
 		public Server (): this(DefaultEndPoint)
 		{
@@ -26,13 +27,10 @@ namespace LyncRPC
 		public Server (IPEndPoint endpoint)
 		{
 			_endpoint = endpoint;
-			_stopSignal.Reset ();
-			_stoppedSignal.Reset ();
 		}
 
 		public void Start ()
 		{
-			Console.WriteLine ("starting...");
 			if (_pumpThread != null) {
 				Stop ();
 			}
@@ -40,24 +38,22 @@ namespace LyncRPC
 			_stopSignal.Reset ();
 			_stoppedSignal.Reset ();
 
-			_pumpThread = new Thread (clientPump);
+			_pumpThread = new Thread (ClientPump);
 			_pumpThread.IsBackground = false;
 			_pumpThread.Start ();
 		}
 
 		public void Stop ()
 		{
-			Console.WriteLine ("stopping...");
 			if (_pumpThread == null)
 				return;
 
 			_stopSignal.Set ();
 			_stoppedSignal.Wait ();
 			_pumpThread = null;
-			Console.WriteLine ("stopped.");
 		}
 
-		private void clientPump ()
+		private void ClientPump ()
 		{
 			var listener = new TcpListener (_endpoint);
 			listener.Start ();
@@ -67,8 +63,7 @@ namespace LyncRPC
 				var socket = listener.AcceptSocket ();
 				socket.NoDelay = true;
 
-				var handler = new Thread (new ThreadStart (() => echo (socket)));
-				handler.Start ();
+				new Thread(() => { HandleClient(socket); }).Start ();
 			}
 
 			for (var i = 0; i < MaxClients; i++)
@@ -76,23 +71,11 @@ namespace LyncRPC
 			_stoppedSignal.Set ();
 		}
 
-		private void echo (Socket socket)
+		private void HandleClient (Socket socket)
 		{
 			_clientSlots.Wait ();
 			try {
-				var stream = new NetworkStream (socket);
-				var reader = new BufferedStream (stream);
-				var buffer = new byte[4096];
-				var bytesRead = 0;
-
-				while (!_stopSignal.IsSet) {
-					bytesRead = reader.Read (buffer, 0, buffer.Length);
-					if (bytesRead == 0) {
-						break;
-					}
-
-					stream.Write (buffer, 0, bytesRead);
-				}
+				new Handler(socket, _stopSignal).Run ();
 
 			} finally {
 				_clientSlots.Release ();
