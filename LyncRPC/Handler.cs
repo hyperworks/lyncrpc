@@ -66,6 +66,7 @@ namespace LyncRPC
 		{
 			var state = new JsonRpcStateAsync (HandleRpcResult, null);
 			state.JsonRpc = line;
+			Log.Info ("client: " + line);
 			JsonRpcProcessor.Process (state);
 		}
 
