@@ -15,15 +15,11 @@ namespace LyncRPC
 		public LyncController ()
 		{
 			_client = LyncClient.GetClient (false);
-			_client.StateChanged += LyncClient_StateChanged;
-			_client.SignInDelayed += LyncClient_SignInDelayed;
-			_client.CredentialRequested += LyncClient_CredentialRequested;
 		}
 
 		public Task Initialize ()
 		{
 			LAssert.Pre (ShouldInitialize, "already initializing or initialized.");
-
 			Log.Info ("lync: initializing...");
 			return Task.Factory.FromAsync (_client.BeginInitialize, _client.EndInitialize, null)
 				.ContinueWith (handleException)
@@ -37,25 +33,25 @@ namespace LyncRPC
 			LAssert.Pre (CanSignIn, "not signed out.");
 			_client.SignInConfiguration.InternalServerUrl = serverUrl;
 			_client.SignInConfiguration.ExternalServerUrl = serverUrl;
+			_client.SignInConfiguration.IsPasswordSaved = false;
 
-			Log.Info ("lync: signing in...");
-			return Task.Factory.FromAsync (_client.BeginSignIn, _client.EndSignIn, username, username, password, null)
-				.ContinueWith (handleException)
-				.ContinueWith (task => {
+			var credsHandler = new EventHandler<CredentialRequestedEventArgs> ((sender, e) => {
+				if (e.Type != CredentialRequestedType.LyncAutodiscover)
+					return;
+
+				e.Submit (username, password, false);
+			});
+
+			var finish = new Action<Task> (task => {
+				_client.CredentialRequested -= credsHandler;
 				Log.Info ("lync: signed in " + username);
 			});
-		}
 
-		private void LyncClient_StateChanged (object sender, ClientStateChangedEventArgs e)
-		{
-		}
-
-		private void LyncClient_SignInDelayed (object sender, SignInDelayedEventArgs e)
-		{
-		}
-
-		private void LyncClient_CredentialRequested (object sender, CredentialRequestedEventArgs e)
-		{
+			Log.Info ("lync: signing in...");
+			_client.CredentialRequested += credsHandler;
+			return Task.Factory.FromAsync (_client.BeginSignIn, _client.EndSignIn, username, username, password, null)
+				.ContinueWith (handleException)
+				.ContinueWith (finish);
 		}
 
 
