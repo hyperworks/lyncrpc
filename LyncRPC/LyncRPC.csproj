@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>LyncRPC</RootNamespace>
     <AssemblyName>LyncRPC</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>True</DebugSymbols>
@@ -33,13 +33,28 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="AustinHarris.JsonRpc">
       <HintPath>..\packages\AustinHarris.JsonRpc.1.0.4.22\lib\net40\AustinHarris.JsonRpc.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.Lync.Controls.Framework">
+      <HintPath>..\LyncSDK\Assemblies\Desktop\Microsoft.Lync.Controls.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Lync.Controls">
+      <HintPath>..\LyncSDK\Assemblies\Desktop\Microsoft.Lync.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Lync.Model">
+      <HintPath>..\LyncSDK\Assemblies\Desktop\Microsoft.Lync.Model.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Lync.Utilities">
+      <HintPath>..\LyncSDK\Assemblies\Desktop\Microsoft.Lync.Utilities.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Office.Uc">
+      <HintPath>..\LyncSDK\Assemblies\Desktop\Microsoft.Office.Uc.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
