@@ -65,6 +65,7 @@
     <Compile Include="Log.cs" />
     <Compile Include="LyncController.cs" />
     <Compile Include="LAssert.cs" />
+    <Compile Include="Result.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

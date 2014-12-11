@@ -36,6 +36,20 @@ namespace LyncRPC
 			return XmlConvert.ToString (now, XmlDateTimeSerializationMode.RoundtripKind);
 		}
 
+		public struct SignInRequest
+		{
+			public string ServerUrl;
+			public string Username;
+			public string Password;
+		}
+
+		[JsonRpcMethod ("SIGNIN")]
+		public Result SignIn (SignInRequest request)
+		{
+			_lync.SignIn (request.ServerUrl, request.Username, request.Password).Wait ();
+			return new Result (true);
+		}
+
 		[JsonRpcMethod ("LOGIN")]
 		public void Login ()
 		{
