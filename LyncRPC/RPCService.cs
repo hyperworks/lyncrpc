@@ -7,7 +7,8 @@ namespace LyncRPC
 {
 	public class RPCService: JsonRpcService
 	{
-		public struct HelloRequest {
+		public struct HelloRequest
+		{
 			public string Name;
 		};
 
@@ -17,8 +18,12 @@ namespace LyncRPC
 			return "Hello, " + request.Name;
 		}
 
-		[JsonRpcMethod("DATE")]
-		public string Date()
+		public struct DateRequest
+		{
+		}
+
+		[JsonRpcMethod ("DATE")]
+		public string Date (DateRequest request)
 		{
 			var now = DateTime.UtcNow;
 			return XmlConvert.ToString (now, XmlDateTimeSerializationMode.RoundtripKind);
