@@ -7,11 +7,16 @@ namespace LyncRPC
 	{
 		public static void Main (string[] args)
 		{
-			// constructing the service causes it to be registered (see JsonRpcMethod.cs source for more info.)
-			Log.Info ("registering service...");
-			new RPCService ();
+			var controller = new LyncController ();
+			Log.Info ("lync: initializing...");
+			controller.Initialize ().ContinueWith (task => {
+				if (task.Exception != null)
+					throw task.Exception;
+			}).Wait ();
+			Log.Info ("lync: initialized.");
 
-			Log.Info ("starting server...");
+			// constructing the service causes it to be registered (see JsonRpcMethod.cs source for more info.)
+			new RPCService (controller);
 			new Server ().Start ();
 		}
 	}

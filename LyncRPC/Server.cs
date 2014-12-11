@@ -31,6 +31,7 @@ namespace LyncRPC
 
 		public void Start ()
 		{
+			Log.Info ("server: starting up...");
 			if (_pumpThread != null) {
 				Stop ();
 			}
@@ -41,16 +42,19 @@ namespace LyncRPC
 			_pumpThread = new Thread (ClientPump);
 			_pumpThread.IsBackground = false;
 			_pumpThread.Start ();
+			Log.Info ("server: listening on " + _endpoint.ToString() + "...");
 		}
 
 		public void Stop ()
 		{
+			Log.Info ("server: stopping...");
 			if (_pumpThread == null)
 				return;
 
 			_stopSignal.Set ();
 			_stoppedSignal.Wait ();
 			_pumpThread = null;
+			Log.Info ("server: stopped.");
 		}
 
 		private void ClientPump ()
@@ -61,7 +65,6 @@ namespace LyncRPC
 			_clientSlots = new SemaphoreSlim (MaxClients, MaxClients);
 			while (!_stopSignal.IsSet) {
 				var socket = listener.AcceptSocket ();
-				Log.Info ("client: accepted.");
 				socket.NoDelay = true;
 
 				new Thread (() => {
@@ -78,8 +81,9 @@ namespace LyncRPC
 		{
 			_clientSlots.Wait ();
 			try {
+				Log.Info ("server: accepted " + socket.RemoteEndPoint.ToString());
 				new Handler (socket, _stopSignal).Run ();
-				Log.Info("client: disconnected.");
+				Log.Info("server: disconnected " + socket.RemoteEndPoint.ToString());
 
 			} finally {
 				_clientSlots.Release ();

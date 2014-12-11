@@ -7,6 +7,13 @@ namespace LyncRPC
 {
 	public class RPCService: JsonRpcService
 	{
+		private LyncController _lync;
+
+		public RPCService (LyncController controller) : base ()
+		{
+			_lync = controller;
+		}
+
 		public struct HelloRequest
 		{
 			public string Name;
