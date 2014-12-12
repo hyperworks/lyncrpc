@@ -31,14 +31,18 @@ namespace LyncRPC
 		public Task SignIn (string serverUrl, string username, string password)
 		{
 			LAssert.Pre (CanSignIn, "not signed out.");
+			_client.SignInConfiguration.Mode = LyncClientConfigurationMode.Manual;
 			_client.SignInConfiguration.InternalServerUrl = serverUrl;
 			_client.SignInConfiguration.ExternalServerUrl = serverUrl;
+			_client.SignInConfiguration.SignInAsAvailability = true;
+			_client.SignInConfiguration.SignInAutoRetry = false;
 			_client.SignInConfiguration.IsPasswordSaved = false;
 
 			var credsHandler = new EventHandler<CredentialRequestedEventArgs> ((sender, e) => {
 				if (e.Type != CredentialRequestedType.LyncAutodiscover)
 					return;
 
+				Log.Info("lync: submitting credentials...");
 				e.Submit (username, password, false);
 			});
 
