@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Lync.Model;
 
@@ -7,14 +8,17 @@ namespace LyncRPC
 	public class LyncController
 	{
 		private LyncClient _client;
+		private ConversationController _conversations;
+
+		public ConversationController conversation { get { return _conversations; } }
 
 		public bool ShouldInitialize { get { return _client.State == ClientState.Uninitialized; } }
-
 		public bool CanSignIn { get { return _client.State == ClientState.SignedOut; } }
 
 		public LyncController ()
 		{
 			_client = LyncClient.GetClient (false);
+			_conversations = new ConversationController (_client.ConversationManager);
 		}
 
 		public Task Initialize ()
@@ -34,7 +38,6 @@ namespace LyncRPC
 			_client.SignInConfiguration.Mode = LyncClientConfigurationMode.Manual;
 			_client.SignInConfiguration.InternalServerUrl = serverUrl;
 			_client.SignInConfiguration.ExternalServerUrl = serverUrl;
-			_client.SignInConfiguration.SignInAsAvailability = true;
 			_client.SignInConfiguration.SignInAutoRetry = false;
 			_client.SignInConfiguration.IsPasswordSaved = false;
 
