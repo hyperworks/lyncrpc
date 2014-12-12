@@ -14,6 +14,10 @@ namespace LyncRPC
 			_lync = controller;
 		}
 
+		public struct EmptyRequest
+		{
+		}
+
 		public struct HelloRequest
 		{
 			public string Name;
@@ -25,12 +29,8 @@ namespace LyncRPC
 			return "Hello, " + request.Name;
 		}
 
-		public struct DateRequest
-		{
-		}
-
 		[JsonRpcMethod ("DATE")]
-		public string Date (DateRequest request)
+		public string Date (EmptyRequest _)
 		{
 			var now = DateTime.UtcNow;
 			return XmlConvert.ToString (now, XmlDateTimeSerializationMode.RoundtripKind);
@@ -50,10 +50,11 @@ namespace LyncRPC
 			return new Result (true);
 		}
 
-		[JsonRpcMethod ("LOGIN")]
-		public void Login ()
+		[JsonRpcMethod ("SIGNOUT")]
+		public Result SignOut (EmptyRequest _)
 		{
-			// TODO:
+			_lync.SignOut ().Wait ();
+			return new Result (true);
 		}
 	}
 }
