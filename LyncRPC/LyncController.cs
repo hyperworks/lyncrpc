@@ -57,8 +57,14 @@ namespace LyncRPC
 			Log.Info ("lync: signing in...");
 			_client.CredentialRequested += credsHandler;
 			return Task.Factory.FromAsync (_client.BeginSignIn, _client.EndSignIn, username, username, password, null)
-				.ContinueWith (handleException)
-				.ContinueWith (finish);
+				.ContinueWith (finish)
+				.ContinueWith (handleException);
+		}
+
+		public Task SignOut()
+		{
+			LAssert.Pre (!CanSignIn, "not signed in.");
+			return Task.Factory.FromAsync (_client.BeginSignOut, _client.EndSignOut, null);
 		}
 
 
