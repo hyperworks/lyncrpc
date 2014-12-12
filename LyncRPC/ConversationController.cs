@@ -5,7 +5,7 @@ using Microsoft.Lync.Model.Conversation;
 
 namespace LyncRPC
 {
-	public class ConversationController
+	public class ConversationController: IDisposable
 	{
 		private ConversationManager _manager;
 		private Conversation _conversation;
@@ -13,6 +13,11 @@ namespace LyncRPC
 		public ConversationController (ConversationManager manager)
 		{
 			_manager = manager;
+			_conversation = null;
+		}
+
+		public void Dispose ()
+		{
 			_conversation = null;
 		}
 

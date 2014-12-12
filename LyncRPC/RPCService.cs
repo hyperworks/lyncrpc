@@ -44,17 +44,21 @@ namespace LyncRPC
 		}
 
 		[JsonRpcMethod ("SIGNIN")]
-		public Result SignIn (SignInRequest request)
+		public SuccessResult SignIn (SignInRequest request)
 		{
+			if (!_lync.CanSignIn) {
+				_lync.SignOut ().Wait ();
+			}
+		
 			_lync.SignIn (request.ServerUrl, request.Username, request.Password).Wait ();
-			return new Result (true);
+			return new SuccessResult ();
 		}
 
 		[JsonRpcMethod ("SIGNOUT")]
-		public Result SignOut (EmptyRequest _)
+		public SuccessResult SignOut (EmptyRequest _)
 		{
 			_lync.SignOut ().Wait ();
-			return new Result (true);
+			return new SuccessResult ();
 		}
 	}
 }

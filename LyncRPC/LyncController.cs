@@ -5,7 +5,7 @@ using Microsoft.Lync.Model;
 
 namespace LyncRPC
 {
-	public class LyncController
+	public class LyncController: IDisposable
 	{
 		private LyncClient _client;
 		private ConversationController _conversations;
@@ -13,12 +13,27 @@ namespace LyncRPC
 		public ConversationController conversation { get { return _conversations; } }
 
 		public bool ShouldInitialize { get { return _client.State == ClientState.Uninitialized; } }
+
 		public bool CanSignIn { get { return _client.State == ClientState.SignedOut; } }
+
+		public bool IsSignedIn { get { return _client.State == ClientState.SignedIn; } }
 
 		public LyncController ()
 		{
 			_client = LyncClient.GetClient (false);
+			_client.CredentialRequested += client_CredentialRequested;
+			_client.StateChanged += client_StateChanged;
+			Log.Info ("lync: current state: " + _client.State.ToString ());
+
 			_conversations = new ConversationController (_client.ConversationManager);
+		}
+
+		public void Dispose ()
+		{
+			_client.StateChanged -= client_StateChanged;
+			_client = null;
+			_conversations.Dispose ();
+			_conversations = null;
 		}
 
 		public Task Initialize ()
@@ -30,6 +45,11 @@ namespace LyncRPC
 				.ContinueWith (task => {
 				Log.Info ("lync: initialized.");
 			});
+		}
+
+		private void client_StateChanged (object sender, ClientStateChangedEventArgs e)
+		{
+			Log.Info ("lync: state changed to: " + e.NewState.ToString ());
 		}
 
 		public Task SignIn (string serverUrl, string username, string password)
@@ -45,26 +65,33 @@ namespace LyncRPC
 				if (e.Type != CredentialRequestedType.LyncAutodiscover)
 					return;
 
-				Log.Info("lync: submitting credentials...");
+				Log.Info ("lync: submitting credentials...");
 				e.Submit (username, password, false);
 			});
 
 			var finish = new Action<Task> (task => {
 				_client.CredentialRequested -= credsHandler;
-				Log.Info ("lync: signed in " + username);
+				_client.CredentialRequested += client_CredentialRequested;
+				if (IsSignedIn) {
+					Log.Info ("lync: signed in " + username);
+				} else {
+					throw new Exception ("sign-in failure.");
+				}
 			});
 
 			Log.Info ("lync: signing in...");
+			_client.CredentialRequested -= client_CredentialRequested;
 			_client.CredentialRequested += credsHandler;
 			return Task.Factory.FromAsync (_client.BeginSignIn, _client.EndSignIn, username, username, password, null)
 				.ContinueWith (finish)
 				.ContinueWith (handleException);
 		}
 
-		public Task SignOut()
+		public Task SignOut ()
 		{
 			LAssert.Pre (!CanSignIn, "not signed in.");
-			return Task.Factory.FromAsync (_client.BeginSignOut, _client.EndSignOut, null);
+			return Task.Factory.FromAsync (_client.BeginSignOut, _client.EndSignOut, null)
+				.ContinueWith (handleException);
 		}
 
 
@@ -72,6 +99,11 @@ namespace LyncRPC
 		{
 			if (task.Exception != null)
 				throw task.Exception;
+		}
+
+		private void client_CredentialRequested (object sender, CredentialRequestedEventArgs e)
+		{
+			e.Cancel (true);
 		}
 	}
 }
