@@ -36,20 +36,16 @@ namespace LyncRPC
 			_conversations = null;
 		}
 
+
+		#region "Initialization and SignIn/Out"
+
 		public Task Initialize ()
 		{
 			LAssert.Pre (ShouldInitialize, "already initializing or initialized.");
 			Log.Info ("lync: initializing...");
 			return Task.Factory.FromAsync (_client.BeginInitialize, _client.EndInitialize, null)
 				.ContinueWith (handleException)
-				.ContinueWith (task => {
-				Log.Info ("lync: initialized.");
-			});
-		}
-
-		private void client_StateChanged (object sender, ClientStateChangedEventArgs e)
-		{
-			Log.Info ("lync: state changed to: " + e.NewState.ToString ());
+				.ContinueWith (task => Log.Info ("lync: initialized."));
 		}
 
 		public Task SignIn (string serverUrl, string username, string password)
@@ -75,7 +71,7 @@ namespace LyncRPC
 				if (IsSignedIn) {
 					Log.Info ("lync: signed in " + username);
 				} else {
-					throw new Exception ("sign-in failure.");
+					throw new Exception ("sign-in failure last state: " + _client.State.ToString ());
 				}
 			});
 
@@ -94,16 +90,50 @@ namespace LyncRPC
 				.ContinueWith (handleException);
 		}
 
+		#endregion
 
-		private void handleException (Task task)
+
+		#region "Presence Information"
+
+		public Task<ContactAvailability> GetAvailability ()
 		{
-			if (task.Exception != null)
-				throw task.Exception;
+			LAssert.Pre (IsSignedIn, "not signed in.");
+			return new Task<ContactAvailability> (() => (ContactAvailability)_client.Self.Contact.GetContactInformation (ContactInformationType.Availability));
+		}
+
+		public Task SetAvailability (ContactAvailability availability)
+		{
+			LAssert.Pre (IsSignedIn, "not signed in.");
+			var dict = new Dictionary<ContactInformationType, object> { { ContactInformationType.Availability, availability } };
+			return Task.Factory.FromAsync (_client.Self.BeginPublishContactInformation, _client.Self.EndPublishContactInformation, dict, null)
+				.ContinueWith (handleException)
+				.ContinueWith (() => Log.Info ("published availability: " + availability.ToString ()));
+		}
+
+		#endregion
+
+
+		#region "Client Events"
+
+		private void client_StateChanged (object sender, ClientStateChangedEventArgs e)
+		{
+			Log.Info ("lync: state changed to: " + e.NewState.ToString ());
 		}
 
 		private void client_CredentialRequested (object sender, CredentialRequestedEventArgs e)
 		{
 			e.Cancel (true);
+		}
+
+		#endregion
+
+
+		private void handleException (Task task)
+		{
+			if (task.Exception != null) {
+				Log.Error (task.Exception.ToString ());
+				throw task.Exception;
+			}
 		}
 	}
 }

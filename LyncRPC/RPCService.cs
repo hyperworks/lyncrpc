@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Xml;
 using AustinHarris.JsonRpc;
+using Microsoft.Lync.Model;
 
 namespace LyncRPC
 {
@@ -58,6 +59,27 @@ namespace LyncRPC
 		public SuccessResult SignOut (EmptyRequest _)
 		{
 			_lync.SignOut ().Wait ();
+			return new SuccessResult ();
+		}
+
+		[JsonRpcMethod ("AVAILABILITY")]
+		public string GetAvailability (EmptyRequest _)
+		{
+			return _lync.GetAvailability ().Result.ToString ();
+		}
+
+		public struct SetAvailabilityRequest
+		{
+			public string Availability;
+		}
+
+		[JsonRpcMethod ("SET_AVAILABILITY")]
+		public SuccessResult SetAvailability (SetAvailabilityRequest request)
+		{
+			ContactAvailability availability;
+			LAssert.Arg (Enum.TryParse (request.Availability, out availability), "invalid availability value: " + request.Availability);
+
+			_lync.SetAvailability (availability).Wait ();
 			return new SuccessResult ();
 		}
 	}
