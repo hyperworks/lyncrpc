@@ -35,6 +35,7 @@ namespace LyncRPC
         [JsonRpcMethod ("PING")]
         public string Ping (EmptyRequest _)
         {
+            Log.Info ("server: pinged.");
             return "PONG";
         }
 
@@ -126,10 +127,15 @@ namespace LyncRPC
             return true;
         }
 
-        [JsonRpcMethod ("SEND_MESSAGE")]
-        public bool SendMessage (string message)
+        public struct SendMessageRequest
         {
-            _lync.Conversation.SendMessage (message).Wait ();
+            public string Message;
+        }
+
+        [JsonRpcMethod ("SEND_MESSAGE")]
+        public bool SendMessage (SendMessageRequest req)
+        {
+            _lync.Conversation.SendMessage (req.Message).Wait ();
             return true;
         }
 

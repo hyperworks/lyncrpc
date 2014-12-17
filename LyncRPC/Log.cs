@@ -4,7 +4,7 @@ namespace LyncRPC
 {
     public static class Log
     {
-        public static readonly bool VerboseEnabled = false;
+        public static readonly bool VerboseEnabled = true;
 
         public static void Info (string message)
         {

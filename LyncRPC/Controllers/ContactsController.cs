@@ -31,16 +31,15 @@ namespace LyncRPC
             return Task.FromResult (result);
         }
 
-        public Task SetAvailability (ContactAvailability availability)
+        public async Task SetAvailability (ContactAvailability availability)
         {
             LAssert.Pre (IsSignedIn, "not signed in.");
             var dict = new Dictionary<PublishableContactInformationType, object> {
                 { PublishableContactInformationType.Availability, availability }
             };
 
-            return Task.Factory.FromAsync (Client.Self.BeginPublishContactInformation, Client.Self.EndPublishContactInformation, dict, null)
-                .ContinueWith (HandleTaskException)
-                .ContinueWith (task => Log.Info ("published availability: " + availability.ToString ()));
+            await Task.Factory.FromAsync (Client.Self.BeginPublishContactInformation, Client.Self.EndPublishContactInformation, dict, null);
+            Log.Info ("lync: availability set to: " + availability.ToString ());
         }
 
         public Task<IEnumerable<ContactInfo>> GetContactList ()

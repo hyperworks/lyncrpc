@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Lync.Model;
 using Microsoft.Lync.Model.Conversation;
+using System.Runtime.InteropServices;
 
 namespace LyncRPC
 {
@@ -39,6 +40,8 @@ namespace LyncRPC
             await Task.Factory.FromAsync (_modality.BeginSetComposing, _modality.EndSetComposing, true, null);
             await Task.Factory.FromAsync (_modality.BeginSendMessage, _modality.EndSendMessage, content, null);
             await Task.Factory.FromAsync (_modality.BeginSetComposing, _modality.EndSetComposing, false, null);
+
+            Log.Info ("lync: message sent.");
         }
 
         public async Task BeginConversation (string recipientUri)
@@ -49,6 +52,9 @@ namespace LyncRPC
                 .Where (c => c.Participants.Count == 1)
                 .FirstOrDefault (c => c.Participants.First ().Contact.Uri == recipientUri);
             if (conversation != null) {
+                _conversation = conversation;
+                _modality = (InstantMessageModality)conversation.Modalities [ModalityTypes.InstantMessage];
+                Log.Info ("lync: attached to existing conversation.");
                 return;
             }
 
@@ -57,22 +63,26 @@ namespace LyncRPC
                                h => ConversationManager.ConversationAdded -= h);
 
             _conversation = ConversationManager.AddConversation ();
+            Log.Verbose ("lync: waiting for conversation...");
             await addition.Task;
 
-            _conversation = addition.EventArgs.Conversation;
+            _conversation = addition.Task.Result.Conversation;
             var contact = ContactManager.GetContactByUri (recipientUri);
             var participation = new EventWaiter<ParticipantCollectionChangedEventArgs> (
                                     h => _conversation.ParticipantAdded += h,
                                     h => _conversation.ParticipantRemoved -= h);
 
             _conversation.AddParticipant (contact);
+            Log.Verbose ("lync: waiting for participant addition...");
             await participation.Task;
 
-            var participant = participation.EventArgs.Participant;
-            var modality = (InstantMessageModality)participant.Modalities [ModalityTypes.InstantMessage];
-            LAssert.Lync (modality.State == ModalityState.Connected, "IM modaliy not connected.");
+            var self = _conversation.SelfParticipant;
+            var modality = (InstantMessageModality)self.Modalities [ModalityTypes.InstantMessage];
+            // Document seems to state so but it is not always connected:
+            // LAssert.Lync (modality.State == ModalityState.Connected, "IM modality not connected.");
 
             _modality = modality;
+            Log.Info ("lync: conversation began.");
         }
 
         public async Task EndConversation ()
@@ -85,8 +95,10 @@ namespace LyncRPC
 
             _conversation.End ();
             _conversation = null;
-            _modality = null;
             await waiter.Task;
+
+            _modality = null;
+            Log.Info ("lync: conversation ended.");
         }
     }
 }
