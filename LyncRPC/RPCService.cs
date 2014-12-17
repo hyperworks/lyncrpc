@@ -94,7 +94,7 @@ namespace LyncRPC
         [JsonRpcMethod ("CONTACTS")]
         public IEnumerable<ContactInfo> GetContacts (EmptyRequest _)
         {
-            return _lync.contacts.GetContactList ().Result;
+            return _lync.Contacts.GetContactList ().Result;
         }
     }
 }
