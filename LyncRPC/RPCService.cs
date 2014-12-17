@@ -32,6 +32,12 @@ namespace LyncRPC
             return "Hello, " + request.Name;
         }
 
+        [JsonRpcMethod ("PING")]
+        public string Ping (EmptyRequest _)
+        {
+            return "PONG";
+        }
+
         [JsonRpcMethod ("DATE")]
         public string Date (EmptyRequest _)
         {
@@ -48,7 +54,7 @@ namespace LyncRPC
         }
 
         [JsonRpcMethod ("SIGNIN")]
-        public SuccessResult SignIn (SignInRequest request)
+        public bool SignIn (SignInRequest request)
         {
             LAssert.Arg (!string.IsNullOrEmpty (request.ServerUrl), "ServerUrl missing.");
             LAssert.Arg (!string.IsNullOrEmpty (request.Username), "Username missing.");
@@ -60,14 +66,14 @@ namespace LyncRPC
                 _lync.SignOut ().Wait ();
 		
             _lync.SignIn (request.ServerUrl, request.SignInAddress, request.Username, request.Password).Wait ();
-            return new SuccessResult ();
+            return true;
         }
 
         [JsonRpcMethod ("SIGNOUT")]
-        public SuccessResult SignOut (EmptyRequest _)
+        public bool SignOut (EmptyRequest _)
         {
             _lync.SignOut ().Wait ();
-            return new SuccessResult ();
+            return true;
         }
 
         [JsonRpcMethod ("AVAILABILITY")]
@@ -82,13 +88,13 @@ namespace LyncRPC
         }
 
         [JsonRpcMethod ("SET_AVAILABILITY")]
-        public SuccessResult SetAvailability (SetAvailabilityRequest request)
+        public bool SetAvailability (SetAvailabilityRequest request)
         {
             ContactAvailability availability;
             LAssert.Arg (Enum.TryParse (request.Availability, out availability), "invalid availability value: " + request.Availability);
 
             _lync.Contacts.SetAvailability (availability).Wait ();
-            return new SuccessResult ();
+            return true;
         }
 
         [JsonRpcMethod ("CONTACTS")]
@@ -106,6 +112,32 @@ namespace LyncRPC
         public string GetContactAvailability (ContactAvailabilityRequest req)
         {
             return _lync.Contacts.GetContactAvailability (req.Uri).Result.ToString ();
+        }
+
+        public struct BeginConversationRequest
+        {
+            public string RecipientUri;
+        }
+
+        [JsonRpcMethod ("BEGIN_CONVERSATION")]
+        public bool BeginConversation (BeginConversationRequest req)
+        {
+            _lync.Conversation.BeginConversation (req.RecipientUri).Wait ();
+            return true;
+        }
+
+        [JsonRpcMethod ("SEND_MESSAGE")]
+        public bool SendMessage (string message)
+        {
+            _lync.Conversation.SendMessage (message).Wait ();
+            return true;
+        }
+
+        [JsonRpcMethod ("END_CONVERSATION")]
+        public bool EndConversation (EmptyRequest _)
+        {
+            _lync.Conversation.EndConversation ().Wait ();
+            return true;
         }
     }
 }

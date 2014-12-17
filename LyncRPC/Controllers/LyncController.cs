@@ -45,7 +45,7 @@ namespace LyncRPC
 				.ContinueWith (task => Log.Info ("lync: initialized."));
         }
 
-        public Task SignIn (string serverUrl, string signInAddress, string username, string password)
+        public async Task SignIn (string serverUrl, string signInAddress, string username, string password)
         {
             LAssert.Pre (CanSignIn, "not signed out.");
             Client.SignInConfiguration.Mode = LyncClientConfigurationMode.Manual;
@@ -62,22 +62,15 @@ namespace LyncRPC
                 e.Submit (username, password, false);
             });
 
-            var finish = new Action<Task> (task => {
-                Client.CredentialRequested -= credsHandler;
-                Client.CredentialRequested += client_CredentialRequested;
-                if (IsSignedIn) {
-                    Log.Info ("lync: signed in " + username);
-                } else {
-                    throw new Exception ("sign-in failure, last state: " + Client.State.ToString ());
-                }
-            });
-
             Log.Info ("lync: signing in...");
             Client.CredentialRequested -= client_CredentialRequested;
             Client.CredentialRequested += credsHandler;
-            return Task.Factory.FromAsync (Client.BeginSignIn, Client.EndSignIn, signInAddress, username, password, null)
-				.ContinueWith (finish)
-				.ContinueWith (HandleTaskException);
+            await Task.Factory.FromAsync (Client.BeginSignIn, Client.EndSignIn, signInAddress, username, password, null);
+            Client.CredentialRequested -= credsHandler;
+            Client.CredentialRequested += client_CredentialRequested;
+
+            LAssert.Post (IsSignedIn, "sign-in failure, last state: " + Client.State.ToString ());
+            Log.Info ("lync: signed in " + username);
         }
 
         public Task SignOut ()

@@ -64,7 +64,6 @@
     <Compile Include="Handler.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="LAssert.cs" />
-    <Compile Include="SuccessResult.cs" />
     <Compile Include="Controllers\ContactsController.cs" />
     <Compile Include="Controllers\ConversationController.cs" />
     <Compile Include="Controllers\LyncController.cs" />

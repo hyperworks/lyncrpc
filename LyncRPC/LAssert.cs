@@ -9,7 +9,7 @@ namespace LyncRPC
         public static Asserter Pre = A (msg => new InvalidOperationException (msg));
         public static Asserter Arg = A (msg => new ArgumentException (msg));
         public static Asserter Lync = A (msg => new LyncStateException (msg));
-        public static Asserter Post = A (msg => new InvalidOperationException (msg));
+        public static Asserter Post = A (msg => new LyncStateException (msg));
 
         private static Asserter A<T> (Func<string, T> builder) where T: Exception
         {
