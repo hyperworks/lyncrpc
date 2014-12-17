@@ -1,10 +1,10 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml;
 using AustinHarris.JsonRpc;
 using Microsoft.Lync.Model;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace LyncRPC
 {
@@ -12,7 +12,7 @@ namespace LyncRPC
     {
         private LyncController _lync;
 
-        public RPCService (LyncController controller) : base ()
+        internal RPCService (LyncController controller) : base ()
         {
             _lync = controller;
         }
@@ -73,7 +73,7 @@ namespace LyncRPC
         [JsonRpcMethod ("AVAILABILITY")]
         public string GetAvailability (EmptyRequest _)
         {
-            return _lync.GetAvailability ().Result.ToString ();
+            return _lync.Contacts.GetAvailability ().Result.ToString ();
         }
 
         public struct SetAvailabilityRequest
@@ -87,7 +87,7 @@ namespace LyncRPC
             ContactAvailability availability;
             LAssert.Arg (Enum.TryParse (request.Availability, out availability), "invalid availability value: " + request.Availability);
 
-            _lync.SetAvailability (availability).Wait ();
+            _lync.Contacts.SetAvailability (availability).Wait ();
             return new SuccessResult ();
         }
 
