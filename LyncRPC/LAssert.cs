@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace LyncRPC
 {
@@ -11,6 +12,7 @@ namespace LyncRPC
         public static Asserter Lync = A (msg => new LyncStateException (msg));
         public static Asserter Post = A (msg => new LyncStateException (msg));
 
+        [DebuggerStepThrough (), DebuggerHidden ()]
         private static Asserter A<T> (Func<string, T> builder) where T: Exception
         {
             // TODO: No way to construct T generic-ly with a message.
