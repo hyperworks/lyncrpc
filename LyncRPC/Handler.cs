@@ -64,7 +64,7 @@ namespace LyncRPC
 
 		private void ProcessLine (string line)
 		{
-			Log.Info ("<<< " + line);
+			Log.Verbose ("<<< " + line);
 
 			var state = new JsonRpcStateAsync (HandleRpcResult, null);
 			state.JsonRpc = line;
@@ -75,7 +75,7 @@ namespace LyncRPC
 		{
 			var state = (JsonRpcStateAsync)ar;
 			var result = state.Result;
-			Log.Info (">>> " + result);
+			Log.Verbose (">>> " + result);
 
 			_writer.Write (result);
 			_writer.Flush ();
