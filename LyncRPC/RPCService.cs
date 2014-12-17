@@ -96,5 +96,16 @@ namespace LyncRPC
         {
             return _lync.Contacts.GetContactList ().Result;
         }
+
+        public struct ContactAvailabilityRequest
+        {
+            public string Uri;
+        }
+
+        [JsonRpcMethod ("CONTACT_AVAILABILITY")]
+        public string GetContactAvailability (ContactAvailabilityRequest req)
+        {
+            return _lync.Contacts.GetContactAvailability (req.Uri).Result.ToString ();
+        }
     }
 }

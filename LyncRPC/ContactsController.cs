@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Lync.Controls.Internal.ViewModel;
+using System.Configuration;
 
 namespace LyncRPC
 {
@@ -38,6 +39,13 @@ namespace LyncRPC
                 Name = c.GetContactInformation (ContactInformationType.DisplayName) as string,
                 Groups = c.CustomGroups.Select (cg => cg.Name).Concat (new string[]{ g.Name })
             })));
+        }
+
+        public Task<ContactAvailability> GetContactAvailability (string uri)
+        {
+            var contact = _contacts.GetContactByUri (uri);
+            var result = (ContactAvailability)contact.GetContactInformation (ContactInformationType.Availability);
+            return Task.FromResult (result);
         }
     }
 }

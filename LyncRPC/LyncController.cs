@@ -100,8 +100,8 @@ namespace LyncRPC
         public Task<ContactAvailability> GetAvailability ()
         {
             LAssert.Pre (IsSignedIn, "not signed in.");
-            return new Task<ContactAvailability> (() => (ContactAvailability)_client.Self.Contact.GetContactInformation (ContactInformationType.Availability))
-				.ContinueWith<ContactAvailability> (handleException);
+            var result = (ContactAvailability)_client.Self.Contact.GetContactInformation (ContactInformationType.Availability);
+            return Task.FromResult (result);
         }
 
         public Task SetAvailability (ContactAvailability availability)
