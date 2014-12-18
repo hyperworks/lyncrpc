@@ -12,6 +12,8 @@ namespace LyncRPC
     {
         readonly BlockingCollection<IDictionary<InstantMessageContentType, string>> _messages;
 
+        // TODO: Use SelfParticipant.Modality to send and other participant's
+        //   modalities to receive so we can send/receive simultaneously.
         Conversation _conversation = null;
         InstantMessageModality _modality = null;
         bool _collectMessages = false;
@@ -184,7 +186,7 @@ namespace LyncRPC
 
         void modality_InstantMessageReceived (object sender, MessageSentEventArgs e)
         {
-            Log.Info ("lync: message received.");
+            Log.Info ("lync: message received: " + e.Text);
             _messages.Add (e.Contents);
         }
     }
