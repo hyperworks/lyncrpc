@@ -35,7 +35,7 @@ namespace LyncRPC
         {
             LAssert.Pre (IsSignedIn, "not signed in.");
             var dict = new Dictionary<PublishableContactInformationType, object> {
-                { PublishableContactInformationType.Availability, availability }
+                { PublishableContactInformationType.Availability,availability }
             };
 
             await Task.Factory.FromAsync (Client.Self.BeginPublishContactInformation, Client.Self.EndPublishContactInformation, dict, null);
