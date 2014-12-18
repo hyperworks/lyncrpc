@@ -2,22 +2,38 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace LyncRPC
 {
-    public class EventWaiter<T>: TaskCompletionSource<T> where T: EventArgs
+    public class EventWaiter<T> where T: EventArgs
     {
-        private Action<EventHandler<T>> _remover = null;
+        readonly TaskCompletionSource<T> _completion;
+        readonly Action<EventHandler<T>> _remover;
+        readonly Func<object, T, bool> _predicate;
 
-        public EventWaiter (Action<EventHandler<T>> adder, Action<EventHandler<T>> remover) : base ()
+        public Task<T> Task { get { return _completion.Task; } }
+
+        public EventWaiter (Action<EventHandler<T>> adder, Action<EventHandler<T>> remover) : this (adder, remover, (obj, e) => true)
+        {
+        }
+
+        public EventWaiter (Action<EventHandler<T>> adder,
+                            Action<EventHandler<T>> remover,
+                            Func<object, T, bool> predicate) : base ()
         {
             _remover = remover;
+            _predicate = predicate;
+            _completion = new TaskCompletionSource<T> ();
             adder (trigger);
         }
 
-        private void trigger (object sender, T e)
+        void trigger (object sender, T e)
         {
-            SetResult (e);
+            if (_predicate != null && !_predicate (sender, e))
+                return;
+
+            _completion.SetResult (e);
             _remover (trigger);
         }
     }

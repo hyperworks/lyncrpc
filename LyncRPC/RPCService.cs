@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Xml;
 using AustinHarris.JsonRpc;
 using Microsoft.Lync.Model;
@@ -10,7 +8,7 @@ namespace LyncRPC
 {
     public class RPCService: JsonRpcService
     {
-        private LyncController _lync;
+        private readonly LyncController _lync;
 
         internal RPCService (LyncController controller) : base ()
         {
@@ -127,6 +125,13 @@ namespace LyncRPC
             return true;
         }
 
+        [JsonRpcMethod ("ACCEPT_CONVERSATION")]
+        public bool AcceptConversation (EmptyRequest _)
+        {
+            _lync.Conversation.AcceptConversation ().Wait ();
+            return true;
+        }
+
         public struct SendMessageRequest
         {
             public string Message;
@@ -137,6 +142,12 @@ namespace LyncRPC
         {
             _lync.Conversation.SendMessage (req.Message).Wait ();
             return true;
+        }
+
+        [JsonRpcMethod ("RECEIVE_MESSAGE")]
+        public string ReceiveMessage (EmptyRequest _)
+        {
+            return _lync.Conversation.ReceiveMessage ().Result;
         }
 
         [JsonRpcMethod ("END_CONVERSATION")]
