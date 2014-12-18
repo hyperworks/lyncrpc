@@ -49,11 +49,11 @@ namespace LyncRPC
             LAssert.Pre (_modality == null, "already in a conversation or not completely ended.");
 
             var conversation = ConversationManager.Conversations
-                .Where (c => c.Participants.Count == 1)
-                .FirstOrDefault (c => c.Participants.First ().Contact.Uri == recipientUri);
+				.Where (c => c.Participants.Count == 2)
+				.FirstOrDefault (c => c.Participants.Any (p => p.Contact.Uri == recipientUri));
             if (conversation != null) {
                 _conversation = conversation;
-                _modality = (InstantMessageModality)conversation.Modalities [ModalityTypes.InstantMessage];
+                _modality = (InstantMessageModality)conversation.SelfParticipant.Modalities [ModalityTypes.InstantMessage];
                 Log.Info ("lync: attached to existing conversation.");
                 return;
             }
