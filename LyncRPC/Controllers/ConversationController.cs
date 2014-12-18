@@ -14,6 +14,7 @@ namespace LyncRPC
 
         Conversation _conversation = null;
         InstantMessageModality _modality = null;
+        bool _collectMessages = false;
 
         public ConversationController (LyncClient client) : base (client)
         {
@@ -73,7 +74,7 @@ namespace LyncRPC
 				.FirstOrDefault (c => c.Participants.Any (p => p.Contact.Uri == recipientUri));
             if (conversation != null) {
                 _conversation = conversation;
-                _modality = (InstantMessageModality)conversation.SelfParticipant.Modalities [ModalityTypes.InstantMessage];
+                await attachIM ((InstantMessageModality)conversation.SelfParticipant.Modalities [ModalityTypes.InstantMessage]);
                 Log.Info ("lync: attached to existing conversation.");
                 return;
             }
@@ -96,7 +97,7 @@ namespace LyncRPC
             Log.Verbose ("lync: waiting for participant addition...");
             await participation.Task;
 
-            await attachIM ((InstantMessageModality)_conversation.Modalities [ModalityTypes.InstantMessage]);
+            await attachIM ((InstantMessageModality)_conversation.SelfParticipant.Modalities [ModalityTypes.InstantMessage]);
             Log.Info ("lync: conversation began.");
         }
 
@@ -125,35 +126,40 @@ namespace LyncRPC
                 .FirstOrDefault (p => p.Contact.Uri != _conversation.SelfParticipant.Contact.Uri);
             LAssert.Lync (participant != null, "conversation has no participant.");
 
-            await attachIM ((InstantMessageModality)participant.Modalities [ModalityTypes.InstantMessage]);
+            await attachIM ((InstantMessageModality)participant.Modalities [ModalityTypes.InstantMessage], true);
             Log.Info ("lync: conversation invite accepted.");
         }
 
-        async Task attachIM (InstantMessageModality modality)
+        async Task attachIM (InstantMessageModality modality, bool collectMessages = false)
         {
             // Document seems to state so but it is not always connected:
             // LAssert.Lync (modality.State == ModalityState.Connected, "IM modality not connected.");
 
             if (_modality != null) {
-                _modality.InstantMessageReceived -= modality_InstantMessageReceived;
+                if (_collectMessages)
+                    _modality.InstantMessageReceived -= modality_InstantMessageReceived;
                 _modality = null;
             }
 
             if (modality != null) {
                 _modality = modality;
-                _modality.InstantMessageReceived += modality_InstantMessageReceived;
+                _collectMessages = collectMessages;
+                if (_collectMessages) {
+                    _modality.InstantMessageReceived += modality_InstantMessageReceived;
 
-                if (_modality.State != ModalityState.Connected) {
-                    var waiter = new EventWaiter<ModalityStateChangedEventArgs> (
-                                     h => modality.ModalityStateChanged += h,
-                                     h => modality.ModalityStateChanged -= h,
-                                     (sender, e) => {
-                            Log.Verbose ("lync: modality state changed to: " + e.NewState.ToString ());
-                            return e.NewState == ModalityState.Connected;
-                        });
+                    // we need to be connected to receive messages.
+                    if (_modality.State != ModalityState.Connected) {
+                        var waiter = new EventWaiter<ModalityStateChangedEventArgs> (
+                                         h => modality.ModalityStateChanged += h,
+                                         h => modality.ModalityStateChanged -= h,
+                                         (sender, e) => {
+                                Log.Verbose ("lync: modality state changed to: " + e.NewState.ToString ());
+                                return e.NewState == ModalityState.Connected;
+                            });
 
-                    Log.Verbose ("lync: waiting for IM to connect...");
-                    await waiter.Task;
+                        Log.Verbose ("lync: waiting for IM to connect...");
+                        await waiter.Task;
+                    }
                 }
             }
         }
